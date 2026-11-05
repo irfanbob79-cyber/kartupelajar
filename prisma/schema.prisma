@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SchoolProfile {
+  id            String   @id @default(uuid())
+  schoolName    String   @default("SMK NEGERI 1 LABUHAN MARINGGAI")
+  npsn          String   @default("10806050")
+  address       String   @default("Jl. Raya Maringgai No. 1, Labuhan Maringgai, Lampung Timur")
+  phone         String   @default("(0725) 7654321")
+  website       String   @default("www.smkn1labuhanmaringgai.sch.id")
+  logoLeftUrl   String?
+  logoRightUrl  String?
+  principalName String   @default("Drs. H. Ahmad Dahlan, M.Pd.")
+  principalNip  String   @default("19750817 200003 1 004")
+  signatureUrl  String?
+  stampUrl      String?
+  academicYear  String   @default("2026/2027")
+  cityIssued    String   @default("Labuhan Maringgai")
+  updatedAt     DateTime @updatedAt
+}
+
+model Major {
+  id                 String    @id @default(uuid())
+  code               String    @unique
+  name               String
+  themeColor         String    @default("#1E3A8A")
+  accentColor        String    @default("#F59E0B")
+  backgroundFrontUrl String?
+  backgroundBackUrl  String?
+  showPhotoBorder    Boolean   @default(false)
+  photoStyle         String    @default("SEAMLESS")
+  footerStyle        String    @default("CLEAN")
+  footerLeftMode     String    @default("TEXT")
+  footerLogoUrl      String?   @default("/images/smk-bisa-hebat.jpg")
+  students           Student[]
+  createdAt          DateTime  @default(now())
+}
+
+model Student {
+  id          String   @id @default(uuid())
+  nis         String   @unique
+  nisn        String   @unique
+  fullName    String
+  birthPlace  String
+  birthDate   String
+  gender      String   @default("L")
+  address     String
+  photoUrl    String?
+  majorId     String
+  major       Major    @relation(fields: [majorId], references: [id], onDelete: Cascade)
+  validUntil  String   @default("Juli 2027")
+  status      String   @default("AKTIF")
+  isPrinted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CardTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  orientation String   @default("PORTRAIT")
+  frontConfig String   @default("{}")
+  backConfig  String   @default("{}")
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
