@@ -95,6 +95,12 @@ export default function StudentCardFront({
                   src={school.logoLeftUrl}
                   alt="Logo Sekolah"
                   className="max-w-full max-h-full object-contain drop-shadow-md"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes("/images/logo-sekolah.png")) {
+                      target.src = "/images/logo-sekolah.png";
+                    }
+                  }}
                 />
               ) : (
                 <span className="text-[10px] font-black text-amber-300">ID</span>
@@ -128,6 +134,12 @@ export default function StudentCardFront({
                   src={school.logoLeftUrl}
                   alt="Logo Sekolah"
                   className="max-w-full max-h-full object-contain drop-shadow-xs"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes("/images/logo-sekolah.png")) {
+                      target.src = "/images/logo-sekolah.png";
+                    }
+                  }}
                 />
               ) : (
                 <span className="text-[11px] font-black" style={{ color: themeColor }}>ID</span>
@@ -173,6 +185,9 @@ export default function StudentCardFront({
                       src={student.photoUrl}
                       alt={student.fullName}
                       className="w-full h-full object-contain [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm scale-105"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = "none";
+                      }}
                     />
                   </div>
                 ) : (
@@ -234,6 +249,9 @@ export default function StudentCardFront({
                   src={student.photoUrl}
                   alt={student.fullName}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = "none";
+                  }}
                 />
               ) : (
                 <div className="text-center p-2 text-slate-400">
@@ -386,6 +404,12 @@ export default function StudentCardFront({
                 src={logoUrl}
                 alt="SMK BISA - HEBAT"
                 className="max-h-full max-w-full object-contain"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes("/images/smk-bisa-hebat.jpg")) {
+                    target.src = "/images/smk-bisa-hebat.jpg";
+                  }
+                }}
               />
             </div>
             <span className="text-[6px] font-semibold mt-0.5 tracking-tight text-slate-500">

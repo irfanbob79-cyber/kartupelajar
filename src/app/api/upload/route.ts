@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type") || "";
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "students");
+
+    // Ensure upload directory exists
+    await mkdir(uploadDir, { recursive: true });
 
     // 1. JSON Payload (Base64 captured from Webcam)
     if (contentType.includes("application/json")) {
@@ -24,9 +28,7 @@ export async function POST(req: NextRequest) {
         .slice(0, 30);
       const generatedFilename = `${safeName}_${Date.now()}.jpg`;
 
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "students");
       const filePath = path.join(uploadDir, generatedFilename);
-
       await writeFile(filePath, buffer);
 
       return NextResponse.json({
@@ -51,9 +53,7 @@ export async function POST(req: NextRequest) {
     const safeName = identifier.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 30);
     const generatedFilename = `${safeName}_${Date.now()}${ext}`;
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "students");
     const filePath = path.join(uploadDir, generatedFilename);
-
     await writeFile(filePath, buffer);
 
     return NextResponse.json({

@@ -145,6 +145,9 @@ export default function StudentCardBack({
                     src={school.stampUrl}
                     alt="Stempel"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = "none";
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full rounded-full border border-dashed border-blue-700/50 flex flex-col items-center justify-center text-[4px] font-bold text-blue-800 leading-none text-center">
@@ -162,6 +165,9 @@ export default function StudentCardBack({
                     src={school.signatureUrl}
                     alt="TTD"
                     className="max-h-full object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = "none";
+                    }}
                   />
                 ) : (
                   <div className="font-serif italic text-slate-700 text-[10px] tracking-wider pr-1">

@@ -344,16 +344,33 @@ export default function TemplateClient({
       });
 
       const json = await res.json();
-      if (json.success && json.url) {
+      if (res.ok && json.success && json.url) {
         setSchoolState((prev) => ({ ...prev, logoLeftUrl: json.url }));
         await updateSchoolProfile({
           ...schoolState,
           logoLeftUrl: json.url,
         });
         router.refresh();
+      } else {
+        alert("Gagal mengunggah logo sekolah: " + (json.error || "Gagal upload"));
       }
     } catch (err: any) {
       alert("Gagal mengunggah logo sekolah: " + err.message);
+    }
+  };
+
+  // Reset School Logo to Default
+  const handleResetSchoolLogo = async () => {
+    try {
+      const defaultUrl = "/images/logo-sekolah.png";
+      setSchoolState((prev) => ({ ...prev, logoLeftUrl: defaultUrl }));
+      await updateSchoolProfile({
+        ...schoolState,
+        logoLeftUrl: defaultUrl,
+      });
+      router.refresh();
+    } catch (err: any) {
+      alert("Gagal mereset logo sekolah: " + err.message);
     }
   };
 
@@ -373,9 +390,11 @@ export default function TemplateClient({
       });
 
       const json = await res.json();
-      if (json.success && json.url) {
+      if (res.ok && json.success && json.url) {
         setFooterLogoUrl(json.url);
         setSaveSuccess(false);
+      } else {
+        alert("Gagal mengunggah logo footer: " + (json.error || "Gagal upload"));
       }
     } catch (err: any) {
       alert("Gagal mengunggah logo footer: " + err.message);
@@ -608,13 +627,19 @@ export default function TemplateClient({
                     src={schoolState.logoLeftUrl}
                     alt="Logo Sekolah"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes("/images/logo-sekolah.png")) {
+                        target.src = "/images/logo-sekolah.png";
+                      }
+                    }}
                   />
                 ) : (
                   <span className="text-xs font-black text-amber-500">ID</span>
                 )}
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <input
                   type="file"
                   accept="image/png, image/jpeg, image/webp"
@@ -622,14 +647,26 @@ export default function TemplateClient({
                   onChange={handleUploadSchoolLogo}
                   className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputSchoolLogoRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs"
-                >
-                  <Upload className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Ganti Logo Sekolah</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputSchoolLogoRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Ganti Logo Sekolah</span>
+                  </button>
+
+                  {schoolState.logoLeftUrl && schoolState.logoLeftUrl !== "/images/logo-sekolah.png" && (
+                    <button
+                      type="button"
+                      onClick={handleResetSchoolLogo}
+                      className="px-2.5 py-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline font-semibold"
+                    >
+                      Kembalikan Logo Default
+                    </button>
+                  )}
+                </div>
                 <p className="text-[10px] text-slate-400">
                   Format PNG transparan rekomendasi (Logo SMKN 1 Labuhan Maringgai aktif)
                 </p>
@@ -754,6 +791,12 @@ export default function TemplateClient({
                     src={footerLogoUrl || "/images/smk-bisa-hebat.jpg"}
                     alt="Logo Footer"
                     className="max-h-full max-w-full object-contain"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes("/images/smk-bisa-hebat.jpg")) {
+                        target.src = "/images/smk-bisa-hebat.jpg";
+                      }
+                    }}
                   />
                 </div>
 
