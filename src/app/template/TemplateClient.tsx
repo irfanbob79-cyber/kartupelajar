@@ -19,9 +19,19 @@ import {
   Barcode,
   Type,
   School as SchoolIcon,
+  Plus,
+  Edit2,
+  Trash,
+  X,
 } from "lucide-react";
 import StudentCardFlipper from "@/components/card/StudentCardFlipper";
-import { updateMajorTheme, applyBackgroundToAllMajors } from "@/app/actions/major";
+import {
+  updateMajorTheme,
+  applyBackgroundToAllMajors,
+  createMajor,
+  updateMajorInfo,
+  deleteMajor,
+} from "@/app/actions/major";
 import { updateSchoolProfile } from "@/app/actions/school";
 
 interface Major {
@@ -122,10 +132,129 @@ export default function TemplateClient({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [applyAllSuccess, setApplyAllSuccess] = useState(false);
 
+  // Modal State for Jurusan Management
+  const [isAddMajorOpen, setIsAddMajorOpen] = useState(false);
+  const [isEditMajorOpen, setIsEditMajorOpen] = useState(false);
+  const [majorForm, setMajorForm] = useState({
+    code: "",
+    name: "",
+    themeColor: "#1E3A8A",
+    accentColor: "#F59E0B",
+  });
+  const [isSubmittingMajor, setIsSubmittingMajor] = useState(false);
+
   const fileInputFrontRef = useRef<HTMLInputElement | null>(null);
   const fileInputBackRef = useRef<HTMLInputElement | null>(null);
   const fileInputLogoRef = useRef<HTMLInputElement | null>(null);
   const fileInputSchoolLogoRef = useRef<HTMLInputElement | null>(null);
+
+  // Open modal to add a new major
+  const handleOpenAddMajor = () => {
+    setMajorForm({
+      code: "",
+      name: "",
+      themeColor: "#1E3A8A",
+      accentColor: "#F59E0B",
+    });
+    setIsAddMajorOpen(true);
+  };
+
+  // Open modal to edit currently selected major
+  const handleOpenEditMajor = () => {
+    if (!currentMajor) return;
+    setMajorForm({
+      code: currentMajor.code,
+      name: currentMajor.name,
+      themeColor: currentMajor.themeColor,
+      accentColor: currentMajor.accentColor,
+    });
+    setIsEditMajorOpen(true);
+  };
+
+  // Create new major
+  const handleSubmitAddMajor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!majorForm.code.trim() || !majorForm.name.trim()) {
+      alert("Kode dan Nama Jurusan wajib diisi!");
+      return;
+    }
+    setIsSubmittingMajor(true);
+    try {
+      const res = await createMajor(majorForm);
+      if (res.success && res.major) {
+        setIsAddMajorOpen(false);
+        router.refresh();
+        setSelectedMajorId(res.major.id);
+        alert(`Jurusan "${res.major.name}" (${res.major.code}) berhasil ditambahkan!`);
+      } else {
+        alert(res.error || "Gagal menambahkan jurusan baru");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setIsSubmittingMajor(false);
+    }
+  };
+
+  // Update existing major info
+  const handleSubmitEditMajor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentMajor) return;
+    if (!majorForm.code.trim() || !majorForm.name.trim()) {
+      alert("Kode dan Nama Jurusan wajib diisi!");
+      return;
+    }
+    setIsSubmittingMajor(true);
+    try {
+      const res = await updateMajorInfo(currentMajor.id, {
+        code: majorForm.code,
+        name: majorForm.name,
+        themeColor: majorForm.themeColor,
+        accentColor: majorForm.accentColor,
+      });
+      if (res.success) {
+        setIsEditMajorOpen(false);
+        router.refresh();
+        alert("Data jurusan berhasil diperbarui!");
+      } else {
+        alert(res.error || "Gagal memperbarui jurusan");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setIsSubmittingMajor(false);
+    }
+  };
+
+  // Delete current major
+  const handleDeleteCurrentMajor = async () => {
+    if (!currentMajor) return;
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus jurusan "${currentMajor.name} (${currentMajor.code})"?\n\nCatatan: Jurusan hanya bisa dihapus jika tidak ada siswa yang terdaftar di jurusan ini.`
+      )
+    ) {
+      return;
+    }
+    setIsSubmittingMajor(true);
+    try {
+      const res = await deleteMajor(currentMajor.id);
+      if (res.success) {
+        const remaining = majors.filter((m) => m.id !== currentMajor.id);
+        if (remaining.length > 0) {
+          handleSelectMajor(remaining[0].id);
+        }
+        router.refresh();
+        alert(`Jurusan "${currentMajor.name}" (${currentMajor.code}) berhasil dihapus.`);
+      } else {
+        alert(res.error || "Gagal menghapus jurusan");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setIsSubmittingMajor(false);
+    }
+  };
 
   // Sync state when major changes
   const handleSelectMajor = (id: string) => {
@@ -358,11 +487,29 @@ export default function TemplateClient({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left: Configuration Panels (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Major Selector */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Pilih Program Keahlian / Jurusan:
-            </label>
+          {/* Major Selector & Management */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Program Keahlian / Jurusan:
+                </label>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Pilih jurusan untuk mengatur tema dan kartu, atau kelola data jurusan sekolah
+                </p>
+              </div>
+
+              {/* Tombol Tambah Jurusan Baru */}
+              <button
+                type="button"
+                onClick={handleOpenAddMajor}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100/80 text-blue-700 text-xs font-bold transition-all shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah Jurusan Baru</span>
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {majors.map((m) => {
                 const isSelected = m.id === selectedMajorId;
@@ -393,6 +540,50 @@ export default function TemplateClient({
                 );
               })}
             </div>
+
+            {/* Active Major Action Toolbar */}
+            {currentMajor && (
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-4 h-4 rounded-full border border-slate-300 shadow-2xs"
+                    style={{ backgroundColor: currentMajor.themeColor }}
+                  />
+                  <div>
+                    <span className="text-slate-500">Jurusan Terpilih: </span>
+                    <strong className="text-slate-900 font-bold">
+                      {currentMajor.code} - {currentMajor.name}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleOpenEditMajor}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-2xs transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Ubah Info Jurusan</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDeleteCurrentMajor}
+                    disabled={majors.length <= 1 || isSubmittingMajor}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 font-semibold shadow-2xs transition-colors disabled:opacity-40"
+                    title={
+                      majors.length <= 1
+                        ? "Tidak dapat menghapus satu-satunya jurusan"
+                        : "Hapus jurusan terpilih"
+                    }
+                  >
+                    <Trash className="w-3.5 h-3.5" />
+                    <span>Hapus</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* LOGO SEKOLAH (POJOK KIRI ATAS KOP KARTU) */}
@@ -992,6 +1183,225 @@ export default function TemplateClient({
           </div>
         </div>
       </div>
+
+      {/* MODAL TAMBAH JURUSAN BARU */}
+      {isAddMajorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <Plus className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Tambah Program Keahlian / Jurusan Baru
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddMajorOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitAddMajor} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Kode Jurusan (Singkatan):
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: DKV, TKJ, RPL, AKL"
+                  value={majorForm.code}
+                  onChange={(e) =>
+                    setMajorForm({ ...majorForm, code: e.target.value.toUpperCase() })
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Singkatan resmi yang dicetak pada kartu dan filter siswa
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap Jurusan:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Desain Komunikasi Visual"
+                  value={majorForm.name}
+                  onChange={(e) =>
+                    setMajorForm({ ...majorForm, name: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Warna Tema Utama:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={majorForm.themeColor}
+                      onChange={(e) =>
+                        setMajorForm({ ...majorForm, themeColor: e.target.value })
+                      }
+                      className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                    />
+                    <input
+                      type="text"
+                      value={majorForm.themeColor}
+                      onChange={(e) =>
+                        setMajorForm({ ...majorForm, themeColor: e.target.value })
+                      }
+                      className="flex-1 px-2.5 py-1 text-xs font-mono font-semibold uppercase rounded-lg border border-slate-300"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Warna Aksen:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={majorForm.accentColor}
+                      onChange={(e) =>
+                        setMajorForm({ ...majorForm, accentColor: e.target.value })
+                      }
+                      className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                    />
+                    <input
+                      type="text"
+                      value={majorForm.accentColor}
+                      onChange={(e) =>
+                        setMajorForm({ ...majorForm, accentColor: e.target.value })
+                      }
+                      className="flex-1 px-2.5 py-1 text-xs font-mono font-semibold uppercase rounded-lg border border-slate-300"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddMajorOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingMajor}
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSubmittingMajor ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Simpan Jurusan Baru</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDIT DATA JURUSAN */}
+      {isEditMajorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Ubah Info Jurusan ({currentMajor.code})
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditMajorOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitEditMajor} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Kode Jurusan:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={majorForm.code}
+                  onChange={(e) =>
+                    setMajorForm({ ...majorForm, code: e.target.value.toUpperCase() })
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Nama Lengkap Jurusan:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={majorForm.name}
+                  onChange={(e) =>
+                    setMajorForm({ ...majorForm, name: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditMajorOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingMajor}
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSubmittingMajor ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Perbarui Data Jurusan</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
