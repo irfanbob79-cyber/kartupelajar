@@ -15,22 +15,72 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 0mm;
   }
 
+  /* 1. Sembunyikan semua elemen UI layar, sidebar, navigasi, dan kontrol */
+  aside,
+  nav,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 2. Reset struktur HTML, Body, dan Main agar tidak ada padding/margin layar */
+  html,
   body {
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .no-print {
-    display: none !important;
+  body {
+    display: block !important;
   }
 
+  main {
+    display: block !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 3. Reset wrapper lembar cetak agar border abu-abu & rounded preview tidak ikut tercetak */
+  .print-clean-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 210mm !important;
+    background: transparent !important;
+  }
+
+  .print-sheet-group,
+  .print-sheet-group > * + * {
+    margin: 0 !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  .print-page-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* 4. Format lembar A4 fisik murni */
   .print-page-sheet {
     width: 210mm !important;
     height: 297mm !important;
@@ -43,13 +93,18 @@ body {
     box-sizing: border-box !important;
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     overflow: hidden !important;
     background: #ffffff !important;
     box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
     margin: 0 auto !important;
+    position: relative !important;
   }
 
-  /* Hide screen guides during physical print */
+  /* 5. Sembunyikan panduan visual roller Epson saat cetak fisik */
   .epson-roller-guide {
     display: none !important;
   }

@@ -196,7 +196,7 @@ export default function PrintClient({
   }, [selectedStudents]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full space-y-6">
+    <div className="print-clean-container p-8 max-w-7xl mx-auto w-full space-y-6">
       {/* Top Header (no-print) */}
       <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -432,7 +432,7 @@ export default function PrintClient({
       </div>
 
       {/* WYSIWYG A4 PRINT SHEETS PREVIEW & PRINT ENGINE */}
-      <div className="space-y-6">
+      <div className="print-sheet-group space-y-6">
         <div className="no-print flex items-center justify-between">
           <span className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
             <Eye className="w-4 h-4 text-blue-600" />
@@ -456,9 +456,9 @@ export default function PrintClient({
             </p>
           </div>
         ) : (
-          <div className="space-y-10">
+          <div className="print-sheet-group space-y-10">
             {pageChunks.map((chunk, pageIndex) => (
-              <div key={pageIndex} className="space-y-2">
+              <div key={pageIndex} className="print-sheet-group space-y-2">
                 <div className="no-print flex items-center justify-between px-2 text-xs font-bold text-slate-600">
                   <span>Lembar A4 Ke-{pageIndex + 1} ({chunk.length} / 9 Kartu)</span>
                   <span className="text-[11px] text-slate-400">
@@ -467,7 +467,7 @@ export default function PrintClient({
                 </div>
 
                 {/* Single A4 Paper Container */}
-                <div className="overflow-x-auto flex justify-center p-4 bg-slate-200/60 rounded-3xl border border-slate-300">
+                <div className="print-page-wrapper overflow-x-auto flex justify-center p-4 bg-slate-200/60 rounded-3xl border border-slate-300">
                   <div
                     className="print-page-sheet bg-white text-slate-900 relative shadow-2xl mx-auto"
                     style={{
@@ -586,7 +586,7 @@ export default function PrintClient({
 
                 {/* If Duplex is enabled, render Back Sheet right after Front Sheet */}
                 {cardSide === "BOTH" && (
-                  <div className="space-y-2 mt-4">
+                  <div className="print-sheet-group space-y-2 mt-4">
                     <div className="no-print flex items-center justify-between px-2 text-xs font-bold text-slate-600">
                       <span>Lembar A4 Ke-{pageIndex + 1} (Sisi Belakang Duplex)</span>
                       <span className="text-[11px] text-blue-600 font-semibold">
@@ -594,7 +594,7 @@ export default function PrintClient({
                       </span>
                     </div>
 
-                    <div className="overflow-x-auto flex justify-center p-4 bg-slate-200/60 rounded-3xl border border-slate-300">
+                    <div className="print-page-wrapper overflow-x-auto flex justify-center p-4 bg-slate-200/60 rounded-3xl border border-slate-300">
                       <div
                         className="print-page-sheet bg-white text-slate-900 relative shadow-2xl mx-auto"
                         style={{
